@@ -21,7 +21,11 @@ class SimpleCalendar {
 
 	private $now;
 	private $daily_html = array();
+	private $weekly_html = array(); 
 	private $offset = 0;
+	private static $htmlCount = 0;
+ 	private static $Cyear;
+ 	private static $Cmonth; 
 
 	/**
 	 * Constructor - Calls the setDate function
@@ -44,6 +48,18 @@ class SimpleCalendar {
 		} else {
 			$this->now = getdate();
 		}
+		$now = $this->now;
+		self::$Cyear = $now["year"];
+		self::$Cmonth = $now["mon"];
+	}
+	
+	/**
+	 * Return the full month name from the month number
+	 */
+	public function setMonth($monthNum) {
+		$dateObj = DateTime::createFromFormat('!m', $monthNum);
+		$monthName = $dateObj->format('F');
+		return $monthName;
 	}
 
 	/**
@@ -54,7 +70,6 @@ class SimpleCalendar {
 	 * @param null|string $end_date_string Date string for when the event ends. Defaults to start date
 	 */
 	public function addDailyHtml( $html, $start_date_string, $end_date_string = null ) {
-		static $htmlCount = 0;
 		$start_date = strtotime($start_date_string);
 		if( $end_date_string ) {
 			$end_date = strtotime($end_date_string);
@@ -66,11 +81,22 @@ class SimpleCalendar {
 		do {
 			$tDate = getdate($working_date);
 			$working_date += 86400;
-			$this->daily_html[$tDate['year']][$tDate['mon']][$tDate['mday']][$htmlCount] = $html;
+			$this->daily_html[$tDate['year']][$tDate['mon']][$tDate['mday']][self::$htmlCount] = $html;
 		} while( $working_date < $end_date + 1 );
 
-		$htmlCount++;
+		self::$htmlCount++;
 
+	}
+	
+	/**
+	 * Creates a repeated weekly event.
+	 * 
+	 * @param int $day Day # to occur on, 1-7 where 1 is sunday
+	 */
+	
+	public function addWeeklyHtml($day, $html, $start_time, $end_time = null ) {
+		$this->weekly_html[self::$Cyear][self::$Cmonth][$day][] = $html;
+		
 	}
 
 	/**
@@ -137,13 +163,25 @@ class SimpleCalendar {
 			$out .= '<time datetime="' . date('Y-m-d', $datetime) . '">' . $i . '</time>';
 
 			$dHtml_arr = false;
+			$wHtml_arr = false;
+			
 			if( isset($this->daily_html[$this->now['year']][$this->now['mon']][$i]) ) {
 				$dHtml_arr = $this->daily_html[$this->now['year']][$this->now['mon']][$i];
+			}
+			if (isset($this->weekly_html[$this->now['year']][$this->now['mon']][$count])) {
+				$wHtml_arr = $this->weekly_html[$this->now['year']][$this->now['mon']][$count];
 			}
 
 			if( is_array($dHtml_arr) ) {
 				foreach( $dHtml_arr as $dHtml ) {
+					if (is_array($dHtml)
 					$out .= '<div class="event">' . $dHtml . '</div>';
+				}
+			}
+			
+			if( is_array($wHtml_arr) ) {
+				foreach( $wHtml_arr as $wHtml ) {
+					$out .= '<div class="event">' . $wHtml . '</div>';
 				}
 			}
 
