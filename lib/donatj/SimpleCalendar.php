@@ -174,7 +174,6 @@ class SimpleCalendar {
 
 			if( is_array($dHtml_arr) ) {
 				foreach( $dHtml_arr as $dHtml ) {
-					if (is_array($dHtml)
 					$out .= '<div class="event">' . $dHtml . '</div>';
 				}
 			}
